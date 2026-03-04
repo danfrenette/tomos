@@ -1,0 +1,10 @@
+/.bundle/
+/pkg/
+/tmp/
+/lib/tomos/tomos.bundle
+/lib/tomos/tomos.so
+target/
+Cargo.lock
+
+# Built gems
+*.gem
