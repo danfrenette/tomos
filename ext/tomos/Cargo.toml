@@ -12,5 +12,6 @@ crate-type = ["cdylib"]
 [dependencies]
 text-splitter = { version = "0.29", features = ["tiktoken-rs", "markdown"] }
 tiktoken-rs = "0.9"
+sha2 = "0.10"
 magnus = "0.8"
 rb-sys = { version = "0.9", features = ["stable-api-compiled-fallback"] }
