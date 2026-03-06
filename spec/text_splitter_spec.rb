@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Tomos::Text do
-  subject(:splitter) { described_class.new("gpt-4", capacity, overlap) }
+  subject(:splitter) { described_class.new(model: "gpt-4", capacity: capacity, overlap: overlap) }
 
   let(:capacity) { 100 }
   let(:overlap) { 10 }
@@ -14,12 +14,12 @@ RSpec.describe Tomos::Text do
     end
 
     it "raises ArgumentError for an unknown model" do
-      expect { described_class.new("nonexistent-model", 100, 0) }
+      expect { described_class.new(model: "nonexistent-model", capacity: 100) }
         .to raise_error(ArgumentError, /unrecognized tiktoken model/)
     end
 
     it "raises ArgumentError when overlap exceeds capacity" do
-      expect { described_class.new("gpt-4", 10, 20) }
+      expect { described_class.new(model: "gpt-4", capacity: 10, overlap: 20) }
         .to raise_error(ArgumentError, /invalid chunk config/)
     end
   end

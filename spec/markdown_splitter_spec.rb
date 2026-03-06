@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Tomos::Markdown do
-  subject(:splitter) { described_class.new("gpt-4", capacity, overlap) }
+  subject(:splitter) { described_class.new(model: "gpt-4", capacity: capacity, overlap: overlap) }
 
   let(:capacity) { 100 }
   let(:overlap) { 0 }

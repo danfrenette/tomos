@@ -143,11 +143,11 @@ fn init(ruby: &Ruby) -> RbResult<()> {
     chunk.define_method("chunk_id", method!(RbChunk::chunk_id, 0))?;
 
     let text = module.define_class("Text", ruby.class_object())?;
-    text.define_singleton_method("new", function!(RbText::new, 3))?;
+    text.define_singleton_method("_new", function!(RbText::new, 3))?;
     text.define_method("chunks", method!(RbText::chunks, 1))?;
 
     let markdown = module.define_class("Markdown", ruby.class_object())?;
-    markdown.define_singleton_method("new", function!(RbMarkdown::new, 3))?;
+    markdown.define_singleton_method("_new", function!(RbMarkdown::new, 3))?;
     markdown.define_method("chunks", method!(RbMarkdown::chunks, 1))?;
 
     Ok(())
