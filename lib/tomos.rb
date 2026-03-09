@@ -8,11 +8,19 @@ module Tomos
     def self.new(model:, capacity:, overlap: 0)
       _new(model, capacity, overlap)
     end
+
+    def self.count_tokens(text, model:)
+      _count_tokens(text, model)
+    end
   end
 
   class Markdown
     def self.new(model:, capacity:, overlap: 0)
       _new(model, capacity, overlap)
+    end
+
+    def self.count_tokens(text, model:)
+      _count_tokens(text, model)
     end
   end
 end

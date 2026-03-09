@@ -141,4 +141,62 @@ RSpec.describe Tomos::Text do
       end
     end
   end
+
+  describe ".count_tokens" do
+    it "returns an Integer for non-empty input" do
+      expect(described_class.count_tokens("Hello, world!", model: "gpt-4")).to be_a(Integer)
+    end
+
+    it "returns a positive count for non-empty input" do
+      expect(described_class.count_tokens("Hello, world!", model: "gpt-4")).to be > 0
+    end
+
+    it "returns 0 for empty string" do
+      expect(described_class.count_tokens("", model: "gpt-4")).to eq(0)
+    end
+
+    it "raises ArgumentError for an unknown model" do
+      expect { described_class.count_tokens("Hello", model: "nonexistent-model") }
+        .to raise_error(ArgumentError, /unrecognized tiktoken model/)
+    end
+
+    it "matches the token_count of the first chunk for short input" do
+      text = "Hello, world!"
+      splitter = described_class.new(model: "gpt-4", capacity: 500)
+      expect(described_class.count_tokens(text, model: "gpt-4")).to eq(splitter.chunks(text).first.token_count)
+    end
+
+    it "is independent of chunk capacity" do
+      text = "The quick brown fox jumps over the lazy dog."
+      small_capacity = described_class.count_tokens(text, model: "gpt-4")
+      large_capacity = described_class.count_tokens(text, model: "gpt-4")
+      expect(small_capacity).to eq(large_capacity)
+    end
+  end
+
+  describe "#count_tokens" do
+    it "returns an Integer for non-empty input" do
+      expect(splitter.count_tokens("Hello, world!")).to be_a(Integer)
+    end
+
+    it "returns a positive count for non-empty input" do
+      expect(splitter.count_tokens("Hello, world!")).to be > 0
+    end
+
+    it "returns 0 for empty string" do
+      expect(splitter.count_tokens("")).to eq(0)
+    end
+
+    it "matches the class method result for the same model" do
+      text = "The quick brown fox jumps over the lazy dog."
+      expect(splitter.count_tokens(text)).to eq(described_class.count_tokens(text, model: "gpt-4"))
+    end
+
+    it "is independent of chunk capacity and overlap" do
+      text = "The quick brown fox jumps over the lazy dog."
+      splitter_a = described_class.new(model: "gpt-4", capacity: 10)
+      splitter_b = described_class.new(model: "gpt-4", capacity: 500, overlap: 0)
+      expect(splitter_a.count_tokens(text)).to eq(splitter_b.count_tokens(text))
+    end
+  end
 end
