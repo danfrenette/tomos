@@ -2,7 +2,7 @@
 
 Token-aware text chunking for RAG pipelines, powered by Rust.
 
-Tomos wraps the [`text-splitter`](https://github.com/benbrandt/text-splitter) Rust crate with [tiktoken](https://github.com/zurawiki/tiktoken-rs) tokenization and exposes two splitter classes to Ruby: `Tomos::Text` for plain text and `Tomos::Markdown` for Markdown documents. Each chunk carries its token count, byte position, and a SHA-256 content fingerprint.
+Tomos wraps the [`text-splitter`](https://github.com/benbrandt/text-splitter) Rust crate and exposes two splitter classes to Ruby: `Tomos::Text` for plain text and `Tomos::Markdown` for Markdown documents. Use [tiktoken](https://github.com/zurawiki/tiktoken-rs) with a model name or load the pinned local Voyage tokenizer. Each chunk carries its token count, byte position, and a SHA-256 content fingerprint.
 
 ## Installation
 
@@ -29,7 +29,7 @@ chunks.each do |chunk|
 end
 ```
 
-The `capacity` is the maximum number of tokens per chunk. An optional `overlap` keyword shares tokens between adjacent chunks, which helps preserve context at boundaries:
+The `capacity` is the maximum number of tokens per chunk. A single Unicode character can exceed that budget if it takes more tokens than the capacity. The optional `overlap` keyword sets a token budget for retaining context between adjacent chunks:
 
 ```ruby
 splitter = Tomos::Text.new(model: "gpt-4", capacity: 512, overlap: 50)
@@ -67,9 +67,29 @@ splitter.count_tokens("Hello, world!")
 # => 4
 ```
 
-Both forms return `0` for empty input and raise `ArgumentError` for unrecognized model names.
+With tiktoken, both forms return `0` for empty input and raise `ArgumentError` for unrecognized model names.
 
-### Supported models
+### Voyage AI tokenizer
+
+Download [`tokenizer.json` for `voyage-code-4`](https://huggingface.co/MongoDB/voyage-code-4/resolve/ac780b405e54ff8b3aff681270e0e03840fed2f3/tokenizer.json) from MongoDB's pinned revision. Use the same `Tomos::Voyage` instance for text, Markdown, and token counts:
+
+```ruby
+voyage = Tomos::Voyage.new(path: "tokenizer.json")
+text_splitter = Tomos::Text.new(tokenizer: voyage, capacity: 512, overlap: 50)
+markdown_splitter = Tomos::Markdown.new(tokenizer: voyage, capacity: 512, overlap: 50)
+
+text_splitter.count_tokens("Hello, world!")
+Tomos::Markdown.count_tokens("# Hello", tokenizer: voyage)
+
+# Persist alongside capacity and overlap when recording the chunking configuration.
+{provider: "voyage", model: voyage.model, revision: voyage.revision}
+```
+
+Pass either `model:` for tiktoken or `tokenizer:` for Voyage. Tomos loads the file locally and validates the pinned SHA-256. A missing or different file raises `ArgumentError`. Loading and counting require no API key or network connection.
+
+Tomos uses the artifact's special-token processing, matching [Voyage's local count API](https://www.mongodb.com/docs/voyageai/tutorials/tokenization/). This revision adds no start or end tokens to the text. A literal marker such as `<|endoftext|>` counts as one token, and empty input counts as zero. The tokenizer applies Unicode normalization for counting while Tomos returns the original bytes.
+
+### Supported tiktoken models
 
 Any model name recognized by tiktoken, including:
 
@@ -95,10 +115,14 @@ Each `Tomos::Chunk` exposes:
 The byte metadata lets you map a chunk back to its exact position in the source:
 
 ```ruby
-source[chunk.byte_offset, chunk.byte_length] == chunk.text # => true
+source.byteslice(chunk.byte_offset, chunk.byte_length) == chunk.text # => true
 ```
 
 The `chunk_id` is deterministic — the same text always produces the same ID, regardless of model, capacity, or overlap.
+
+## Verification
+
+See the [verification recipes](docs/verification/README.md) for local checks.
 
 ## License
 
